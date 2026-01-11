@@ -76,4 +76,10 @@ Tarayıcınızda `http://127.0.0.1:5000` adresine giderek uygulamayı kullanabil
 *   `baslat.ps1`: Otomatik başlatma scripti.
 
 ## 📸 Ekran Görüntüleri
-*(Buraya uygulama ekran görüntüleri eklenebilir)*
+![Ana Sayfa](Screenshots/Anasayfa.png)
+
+### Uygulama İçi Görseller
+| Açıklamalar | Nefes Egzersizi |
+|:---:|:---:|
+| ![Açıklamalar 1](Screenshots/Aciklamalar1.png) | ![Nefes Al](Screenshots/NefesAl.png) |
+| ![Açıklamalar 2](Screenshots/Aciklamalar2.png) | ![Nefes Ver](Screenshots/NefesVer.png) |
