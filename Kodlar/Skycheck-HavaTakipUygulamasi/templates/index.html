@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skycheck - Air Quality Tracker</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PWA -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.png') }}">
+    <meta name="theme-color" content="#1e3c72">
+</head>
+
+<body>
+
+    <div class="container">
+        <button id="infoBtn" class="info-btn" title="Hakkında">
+            <i class="fa-solid fa-circle-info"></i>
+        </button>
+        <h1>SkyCheck 🌤️</h1>
+
+        <div class="search-container">
+            <div class="search-box">
+                <select id="citySelect">
+                    <option value="" disabled selected>Bir Şehir Seçin (Türkiye)</option>
+                    <!-- Options populated by JS -->
+                </select>
+            </div>
+            <button id="locateBtn" class="action-btn" title="Konumumu Bul">
+                <i class="fa-solid fa-location-crosshairs"></i>
+            </button>
+            <button id="favBtn" class="action-btn" title="Favorilere Ekle">
+                <i class="fa-regular fa-star"></i>
+            </button>
+        </div>
+
+        <div id="favoritesList" class="favorites-list">
+            <!-- Favorite chips -->
+        </div>
+
+        <div id="map-container"></div>
+
+        <div id="loader" class="loader"></div>
+
+        <div id="resultCard" class="result-card">
+            <div class="result-header">
+                <div class="city-info">
+                    <div id="cityName" class="city-name">Ankara</div>
+                    <div id="weatherSummary" class="weather-summary">
+                        <!-- Icon and Temp will be here -->
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button id="voiceBtn" class="share-btn" title="Sesli Oku">
+                        <i class="fa-solid fa-microphone-lines"></i>
+                    </button>
+                    <button id="shareBtn" class="share-btn" title="Paylaş">
+                        <i class="fa-solid fa-share-nodes"></i>
+                    </button>
+                    <div id="aqiBadge" class="aqi-badge">Good</div>
+                </div>
+            </div>
+
+            <!-- Precitipation Warning Alert (Phase 7) -->
+            <div id="precipAlert" class="alert-card" style="display: none;">
+                <div class="alert-icon">
+                    <i id="alertIcon" class="fa-solid fa-umbrella"></i>
+                </div>
+                <div class="alert-content">
+                    <span class="alert-title">Hava Durumu Uyarısı</span>
+                    <span id="alertText" class="alert-msg">...</span>
+                </div>
+            </div>
+
+            <div class="activity-guide">
+                <div class="activity-item" id="act-sport">
+                    <i class="fa-solid fa-person-running"></i>
+                    <span>Spor</span>
+                    <i class="status-icon fa-solid fa-circle-check"></i>
+                </div>
+                <div class="activity-item" id="act-window">
+                    <i class="fa-solid fa-wind"></i>
+                    <span>Havalandır</span>
+                    <i class="status-icon fa-solid fa-circle-check"></i>
+                </div>
+                <div class="activity-item" id="act-mask">
+                    <i class="fa-solid fa-head-side-mask"></i>
+                    <span>Maske</span>
+                    <i class="status-icon fa-solid fa-circle-xmark"></i>
+                </div>
+                <div class="activity-item" id="act-picnic">
+                    <i class="fa-solid fa-tree"></i>
+                    <span>Dışarı Çık</span>
+                    <i class="status-icon fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+
+            <!-- Phase 6: Lifestyle & Wellbeing -->
+            <div class="lifestyle-section">
+                <!-- Clothing Recommendation -->
+                <div class="lifestyle-card" id="clothingCard">
+                    <div class="ls-icon">
+                        <i id="clothIcon" class="fa-solid fa-shirt"></i>
+                    </div>
+                    <div class="ls-content">
+                        <span class="ls-title">Ne Giysem?</span>
+                        <span id="clothText" class="ls-value">Hava durumuna göre öneri yükleniyor...</span>
+                    </div>
+                </div>
+
+                <!-- Breathing Exercise Button -->
+                <div class="lifestyle-card interactable" id="breatheBtn">
+                    <div class="ls-icon">
+                        <i class="fa-solid fa-lungs"></i>
+                    </div>
+                    <div class="ls-content">
+                        <span class="ls-title">Nefes Modu</span>
+                        <span class="ls-value">Rahatlamak için dokun</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Breathing Exercise Overlay -->
+            <div id="breathingModal" class="modal breathe-modal">
+                <div class="modal-content breathe-content">
+                    <span class="close-btn" id="closeBreathe">&times;</span>
+                    <h2>Nefes Egzersizi</h2>
+                    <div class="breathe-container">
+                        <div class="circle"></div>
+                        <p id="breatheText">Nefes Al...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 8: Atmosphere Details -->
+            <div class="detailed-metrics">
+                <div class="metric-item">
+                    <i class="fa-solid fa-droplet"></i>
+                    <span id="humidity">--%</span>
+                    <span class="m-label">Nem</span>
+                </div>
+                <!-- Extra metrics -->
+                <div class="metric-item">
+                    <i class="fa-solid fa-temperature-half"></i>
+                    <span id="feelsLike">--°</span>
+                    <span class="m-label">Hissedilen</span>
+                </div>
+                <div class="metric-item">
+                    <i class="fa-solid fa-eye"></i>
+                    <span id="visibility">-- km</span>
+                    <span class="m-label">Görüş</span>
+                </div>
+                <div class="metric-item">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span id="pressure">-- hPa</span>
+                    <span class="m-label">Basınç</span>
+                </div>
+
+                <div class="metric-item">
+                    <i class="fa-solid fa-wind"></i>
+                    <span id="windSpeed">-- km/s</span>
+                    <span class="m-label">Rüzgar</span>
+                </div>
+                <div class="metric-item">
+                    <i class="fa-solid fa-sun-plant-wilt"></i> <!-- Using sun icon for sunrise/set approximation -->
+                    <span id="sunrise">--:--</span>
+                    <span class="m-label">G. Doğumu</span>
+                </div>
+                <div class="metric-item">
+                    <i class="fa-solid fa-moon"></i>
+                    <span id="sunset">--:--</span>
+                    <span class="m-label">G. Batımı</span>
+                </div>
+            </div>
+
+            <div class="pollutants-grid">
+                <div class="pollutant-item"
+                    data-tooltip="İnce partikül madde. Akciğerlere derinlemesine nüfuz edebilir.">
+                    <span class="p-label">PM2.5 <i class="fa-regular fa-circle-question"></i></span>
+                    <span id="pm25" class="p-value">--</span>
+                </div>
+                <div class="pollutant-item" data-tooltip="Kaba partikül madde. Solunum yollarını tahriş edebilir.">
+                    <span class="p-label">PM10 <i class="fa-regular fa-circle-question"></i></span>
+                    <span id="pm10" class="p-value">--</span>
+                </div>
+                <div class="pollutant-item"
+                    data-tooltip="Karbonmonoksit. Yüksek dozda baş ağrısı ve baş dönmesi yapabilir.">
+                    <span class="p-label">CO <i class="fa-regular fa-circle-question"></i></span>
+                    <span id="co" class="p-value">--</span>
+                </div>
+                <div class="pollutant-item"
+                    data-tooltip="Azot dioksit. Astım gibi solunum yolu hastalıklarını tetikleyebilir.">
+                    <span class="p-label">NO2 <i class="fa-regular fa-circle-question"></i></span>
+                    <span id="no2" class="p-value">--</span>
+                </div>
+            </div>
+
+            <!-- Phase 8: Risk Groups -->
+            <div class="risk-section">
+                <div class="risk-title">Kimler Risk Altında?</div>
+                <div class="risk-grid">
+                    <div class="risk-card" id="risk-sensitive">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                        <span>Kalp/Akciğer</span>
+                        <div class="risk-tag">Düşük</div>
+                    </div>
+                    <div class="risk-card" id="risk-children">
+                        <i class="fa-solid fa-baby"></i>
+                        <span>Bebek/Çocuk</span>
+                        <div class="risk-tag">Düşük</div>
+                    </div>
+                    <div class="risk-card" id="risk-elderly">
+                        <i class="fa-solid fa-person-cane"></i>
+                        <span>Yaşlılar</span>
+                        <div class="risk-tag">Düşük</div>
+                    </div>
+                    <div class="risk-card" id="risk-general">
+                        <i class="fa-solid fa-people-group"></i>
+                        <span>Genel</span>
+                        <div class="risk-tag">Düşük</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <div class="rec-title">Sağlık Tavsiyesi</div>
+                <p id="recText">Select a city to see recommendations.</p>
+            </div>
+
+            <div class="forecast-section">
+                <h3>5 Günlük Tahmin & Trend</h3>
+                <div class="chart-container">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+                <div id="forecastList" class="forecast-list">
+                    <!-- Forecast items populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <h2>SkyCheck Hakkında</h2>
+            <p><strong>SkyCheck</strong>, Türkiye'deki 81 şehir için gerçek zamanlı hava kalitesi ve hava durumu
+                verilerini sunan modern bir web uygulamasıdır.</p>
+            <br>
+            <h3>Hava Kalitesi İndeksi (AQI) Renkleri:</h3>
+            <ul style="text-align: left; margin-top: 10px;">
+                <li><span style="color:#00e400; font-weight:bold;">Yeşil (1):</span> Çok İyi - Keyfini çıkarın!</li>
+                <li><span style="color:#ffff00; font-weight:bold;">Sarı (2):</span> İyi - Sorun yok.</li>
+                <li><span style="color:#ff7e00; font-weight:bold;">Turuncu (3):</span> Orta - Hassaslar dikkat.</li>
+                <li><span style="color:#ff0000; font-weight:bold;">Kırmızı (4):</span> Kötü - Maske takın.</li>
+                <li><span style="color:#7e0023; font-weight:bold;">Mor (5):</span> Çok Kötü - Dışarı çıkmayın.</li>
+            </ul>
+            <br>
+            <p style="font-size: 0.8rem; opacity: 0.7;">Geliştirici: Nursena & Ahmet <br>Veri Kaynağı: OpenWeatherMap.
+            </p>
+        </div>
+    </div>
+
+    <!-- PWA Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js')
+                .then(() => console.log('Service Worker Registered'));
+        }
+    </script>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+
+</html>
