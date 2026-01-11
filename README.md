@@ -2,6 +2,9 @@
 
 SkyCheck, bulunduğunuz konumdaki veya aradığınız herhangi bir şehirdeki güncel hava durumunu, hava kalitesini ve detaylı meteorolojik verileri sunan modern bir web uygulamasıdır. Flask altyapısı ile geliştirilmiş olup, OpenWeatherMap API'lerini kullanarak anlık ve güvenilir veriler sağlar.
 
+![Ana Sayfa](Screenshots/Home.png)
+
+
 ## 🌟 Özellikler
 
 *   **Anlık Hava Durumu:** Sıcaklık, hissedilen sıcaklık, nem, basınç, rüzgar hızı ve görüş mesafesi gibi temel veriler.
@@ -76,7 +79,6 @@ Tarayıcınızda `http://127.0.0.1:5000` adresine giderek uygulamayı kullanabil
 *   `baslat.ps1`: Otomatik başlatma scripti.
 
 ## 📸 Ekran Görüntüleri
-![Ana Sayfa](Screenshots/Anasayfa.png)
 
 ### Uygulama İçi Görseller
 | Açıklamalar | Nefes Egzersizi |
